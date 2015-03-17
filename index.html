@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name=viewport content="width=device-width, initial-scale=1">
+    <title>Box Drag&Drop Demo</title>
+
+    <script src="./js/vendor/jquery-1.11.2.min.js" type="text/javascript"></script>
+    <script src="./js/vendor/handlebars-v3.0.0.js" type="text/javascript"></script>
+    <script src="./bower_components/dragster/lib/dragster.js" type="text/javascript"></script>
+
+    <link rel="stylesheet" type="text/css" href="./css/vendor/reset.css">
+    <link rel="stylesheet" href="fonts/font-awesome-4.3.0/css/font-awesome.min.css">
+
+    <style type="text/css">
+        .boxesContainer {
+            -webkit-column-count: 2;
+            -moz-column-count: 2;
+            column-count: 2;
+            padding: 10px;
+        }
+
+        .boxContainer {
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            padding: 10px;
+        }
+
+        .box {
+            border: 10px solid rgba(0,0,0,0.3);
+            padding: 10px;
+            display: inline-block;
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 10px;
+        }
+
+        .box.dragOver {
+            border-style: dotted;
+        }
+
+        .box .title {
+            border-bottom: 10px solid rgba(0,0,0,0.3);
+            padding: 5px;
+            font-family: sans-serif;
+            position: relative;
+            color: rgba(0,0,0,0.3);
+            font-size: 18px;
+        }
+
+        .box .title .removeBoxBtn {
+            position: absolute;
+            top: -9px;
+            right: 0;
+            color: rgba(0,0,0,0.3);
+            font-size: 35px;
+            cursor: pointer;
+        }
+
+        .actionBtns {
+            position: fixed;
+            bottom: 0;
+            right: 0;
+            font-size: 50px;
+            margin: 10px;
+        }
+    </style>
+
+	<script type="text/javascript">
+
+        var source = '<div draggable="true" class="box" style="background-color:{{background}};"><div class="title">{{name}}<i class="fa fa-times-circle-o removeBoxBtn"></i></div><div class="content" style="height:{{height}}px"></div></div>',
+            template = Handlebars.compile(source),
+            boxes = [],
+            dragElement;
+
+		jQuery(document).ready(function($) {
+            // ADD THE BOXES IN THE STAGE
+            addBoxes(3);
+
+            // DRAG & DROP LISTENERS
+            $('.boxesContainer').on('dragstart', '.box', handleDragStart);
+            $('.boxesContainer').on('dragend', '.box', handleDragEnd);
+            $('.boxesContainer').on('dragenter', '.box', handleDragEnter);
+            $('.boxesContainer').on('dragleave', '.box', handleDragLeave);
+            $('.boxesContainer').on('dragover', '.box', handleDragOver);
+            $('.boxesContainer').on('drag', '.box', handleDrag);
+            $('.boxesContainer').on('drop', '.box', handleDrop);
+
+
+            $('.boxesContainer').on('dragster:enter', '.box', handleDragsterEnter);
+            $('.boxesContainer').on('dragster:leave', '.box', handleDragsterLeave);
+
+            // DELETE BOX LISTENER
+            $('.boxesContainer').on('click', '.removeBoxBtn', function(event) {
+                $(this).closest('.box').remove();
+            });
+
+            // ADD BOX LISTENER
+            $('.addBoxBtn').on('click', function(event) {
+                addBoxes(1);
+            });
+		});
+
+        function handleDragsterLeave (event) {
+            $(this).removeClass('dragOver');
+        }
+
+        function handleDragsterEnter (event) {
+            $(this).addClass('dragOver');
+        }
+
+        function addBoxes (ammount) {
+
+            for (var i = 0; i < ammount; i++) {
+                boxes.push({
+                    name: 'Box' + (boxes.length + 1),
+                    background: getColor(),
+                    height: getRandomNumber(100, 300)});
+
+                var box = $(template(boxes[boxes.length - 1]));
+                $('.boxesContainer').append(box);
+                new Dragster($(box)[0]);
+            };
+        }
+
+        function getRandomNumber (base, top) {
+            return (Math.ceil(Math.floor(Math.random() * 300) / 10) * 10) + 100;
+        }
+
+        function getColor () {
+            return '#'+Math.floor(Math.random()*16777215).toString(16);
+        }
+
+        function handleDragStart (event) {
+            dragElement = this;
+        }
+
+        function handleDragEnd (event) {
+        }
+
+        function handleDragEnter (event) {
+        }
+
+        function handleDragLeave (event) {
+        }
+
+        function handleDragOver (event) {
+            event.preventDefault();
+        }
+
+        function handleDrag (event) {
+        }
+
+        function handleDrop (event) {
+            $(this).removeClass('dragOver');
+
+            if(dragElement !== this){
+                var thisHTML = $(this).html();
+                var dragHTML = $(dragElement).html();
+
+
+
+                //$(this).html(dragHTML);
+                //$(dragElement).html(thisHTML);
+
+                $(this).before(dragElement);
+            }else {
+                //TODO EQUAL ELEMENTS
+            }
+
+            return false;
+        }
+	</script>
+
+</head>
+<body>
+    <div class="boxesContainer"></div>
+    <div class="actionBtns"><i class="fa fa-plus-circle addBoxBtn"></i></div>
+</body>
+</html>

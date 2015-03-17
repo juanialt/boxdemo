@@ -1,0 +1,24 @@
+{
+  "name": "dragster",
+  "version": "0.1.3",
+  "main": "lib/dragster.js",
+  "ignore": [
+    "demo_assets",
+    "src",
+    "*.json",
+    "*.md",
+    "*.html",
+    "*.ico"
+  ],
+  "homepage": "https://github.com/bensmithett/dragster",
+  "_release": "0.1.3",
+  "_resolution": {
+    "type": "version",
+    "tag": "0.1.3",
+    "commit": "5c2d9be7535c6e13d3db9b9f88bd276aa530b60d"
+  },
+  "_source": "https://github.com/bensmithett/dragster.git",
+  "_target": "~0.1.3",
+  "_originalSource": "dragster",
+  "_direct": true
+}
