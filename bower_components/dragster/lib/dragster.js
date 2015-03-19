@@ -13,6 +13,7 @@
         this.second = false;
         this.el.addEventListener("dragenter", this.dragenter, false);
         this.el.addEventListener("dragleave", this.dragleave, false);
+        this.el.addEventListener("drop", this.dragleave, false); //ADDED TO SUPPORT DROP EVENTS!
       }
     }
 

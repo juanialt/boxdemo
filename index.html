@@ -24,20 +24,25 @@
             display: inline-block;
             width: 100%;
             box-sizing: border-box;
-            padding: 10px;
+            margin-bottom: 10px;
+        }
+
+        .boxContainer.dragging .box{
+            opacity: 0.5;
+        }
+
+        .boxContainer.dragOver .box{
+            border-style: dotted;
         }
 
         .box {
             border: 10px solid rgba(0,0,0,0.3);
             padding: 10px;
-            display: inline-block;
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 10px;
-        }
+            opacity: 1;
 
-        .box.dragOver {
-            border-style: dotted;
+            -webkit-transition: all .3s; /* Safari */
+                    transition: all .3s;
+            -webkit-transform: translateZ(0); /* Fix Chrome bug with transition on opacity */
         }
 
         .box .title {
@@ -63,57 +68,82 @@
             bottom: 0;
             right: 0;
             font-size: 50px;
-            margin: 10px;
+            cursor: pointer;
+            background-color: #FFF;
+
+            border: 10px solid #cacaca;
+            border-bottom: 0;
+            border-right: 0;
+        }
+
+        .actionBtns li {
+            float: left;
+            padding: 5px;
+            min-width: 60px;
+            text-align: center;
+            background-color: gainsboro;
+
+            -webkit-transition: all .3s; /* Safari */
+                    transition: all .3s;
+
+            -webkit-user-select: none; /* Chrome/Safari */        
+               -moz-user-select: none; /* Firefox */
+                -ms-user-select: none; /* IE10+ */
+        }
+
+        .actionBtns li:hover {
+            background-color: mediumaquamarine;
         }
     </style>
 
 	<script type="text/javascript">
 
-        var source = '<div draggable="true" class="box" style="background-color:{{background}};"><div class="title">{{name}}<i class="fa fa-times-circle-o removeBoxBtn"></i></div><div class="content" style="height:{{height}}px"></div></div>',
+        var source = '<div class="boxContainer" draggable="true"><div id="{{id}}" class="box" style="background-color:{{background}};"><div class="title">{{name}}<i class="fa fa-times-circle-o removeBoxBtn"></i></div><div class="content" style="height:{{height}}px"></div></div></div>',
             template = Handlebars.compile(source),
             boxes = [],
             dragElement;
 
 		jQuery(document).ready(function($) {
             // ADD THE BOXES IN THE STAGE
-            addBoxes(3);
+            addBoxes(5);
 
             // DRAG & DROP LISTENERS
-            $('.boxesContainer').on('dragstart', '.box', handleDragStart);
-            $('.boxesContainer').on('dragend', '.box', handleDragEnd);
-            $('.boxesContainer').on('dragenter', '.box', handleDragEnter);
-            $('.boxesContainer').on('dragleave', '.box', handleDragLeave);
-            $('.boxesContainer').on('dragover', '.box', handleDragOver);
-            $('.boxesContainer').on('drag', '.box', handleDrag);
-            $('.boxesContainer').on('drop', '.box', handleDrop);
+            $('.boxesContainer').on('dragstart', '.boxContainer', handleDragStart);
+            $('.boxesContainer').on('dragend', '.boxContainer', handleDragEnd);
+            $('.boxesContainer').on('drop', '.boxContainer', handleDrop);
+            $('.boxesContainer').on('dragster:enter', '.boxContainer', handleDragsterEnter); // Custom drag enter event
+            $('.boxesContainer').on('dragster:leave', '.boxContainer', handleDragsterLeave); // Custom drag leave event
 
-
-            $('.boxesContainer').on('dragster:enter', '.box', handleDragsterEnter);
-            $('.boxesContainer').on('dragster:leave', '.box', handleDragsterLeave);
+            $('.boxesContainer').on('dragover', '.boxContainer', handleDragOver); // We need this callback for drop events
 
             // DELETE BOX LISTENER
             $('.boxesContainer').on('click', '.removeBoxBtn', function(event) {
-                $(this).closest('.box').remove();
+                $(this).closest('.boxContainer').remove();
             });
 
             // ADD BOX LISTENER
             $('.addBoxBtn').on('click', function(event) {
                 addBoxes(1);
             });
+
+            // REMOVE ALL BOXES LISTENER
+            $('.removeAllBtn').on('click', function(event) {
+                $('.boxContainer').remove();
+                boxes = [];
+            });
+
+            // REFRESH STAGE LISTENER
+            $('.refreshBtn').on('click', function(event) {
+                $('.boxContainer').remove();
+                boxes = [];
+                addBoxes(5);
+            });
 		});
 
-        function handleDragsterLeave (event) {
-            $(this).removeClass('dragOver');
-        }
-
-        function handleDragsterEnter (event) {
-            $(this).addClass('dragOver');
-        }
-
         function addBoxes (ammount) {
-
             for (var i = 0; i < ammount; i++) {
                 boxes.push({
+                    id: 'box_'+boxes.length,
                     name: 'Box' + (boxes.length + 1),
                     background: getColor(),
                     height: getRandomNumber(100, 300)});
@@ -129,42 +159,52 @@
         }
 
         function getColor () {
-            return '#'+Math.floor(Math.random()*16777215).toString(16);
+            var letters = '0123456789ABCDEF'.split('');
+            var color = '#';
+            for (var i = 0; i < 6; i++ ) {
+                color += letters[Math.floor(Math.random() * 16)];
+            }
+            return color;
         }
 
         function handleDragStart (event) {
             dragElement = this;
+            $(this).addClass('dragging');
+
+            event.originalEvent.dataTransfer.setData('text/plain', ''); // Without this line doesn't work on Firefox
         }
 
         function handleDragEnd (event) {
-        }
-
-        function handleDragEnter (event) {
-        }
-
-        function handleDragLeave (event) {
+            $(this).removeClass('dragging');
         }
 
         function handleDragOver (event) {
-            event.preventDefault();
+            if (event.preventDefault) {
+                event.preventDefault(); // Necessary. Allows us to drop.
+            }
+            return false;
         }
 
-        function handleDrag (event) {
+        function handleDragsterLeave (event) {
+            $(this).removeClass('dragOver');
+        }
+
+        function handleDragsterEnter (event) {
+            $(this).addClass('dragOver');
         }
 
         function handleDrop (event) {
-            $(this).removeClass('dragOver');
+            if (event.stopPropagation) {
+                event.stopPropagation(); // stops the browser from redirecting.
+            }
+
+            var thisHTML = $(this).html(),
+                dragHTML = $(dragElement).html();
 
             if(dragElement !== this){
-                var thisHTML = $(this).html();
-                var dragHTML = $(dragElement).html();
+                $(this).html(dragHTML);
+                $(dragElement).html(thisHTML);
 
-
-
-                //$(this).html(dragHTML);
-                //$(dragElement).html(thisHTML);
-
-                $(this).before(dragElement);
             }else {
                 //TODO EQUAL ELEMENTS
             }
@@ -176,6 +216,18 @@
 </head>
 <body>
     <div class="boxesContainer"></div>
-    <div class="actionBtns"><i class="fa fa-plus-circle addBoxBtn"></i></div>
+    <div class="actionBtns">
+        <ul>
+            <li>
+                <i class="fa fa-plus-circle addBoxBtn" title="Add new box"></i>
+            </li>
+            <li>
+                <i class="fa fa-trash removeAllBtn" title="Remove all boxes"></i>
+            </li>
+            <li>
+                <i class="fa fa-retweet refreshBtn" title="Refresh stage"></i>
+            </li>
+        </ul>
+    </div>
 </body>
 </html>
